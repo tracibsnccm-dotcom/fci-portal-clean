@@ -479,6 +479,8 @@ function screenComplete() {
 <a id="fci-btn-dashboard"
    class="btn-ghost"
    href="${PORTAL_URL}"
+   target="_parent"
+   rel="noopener noreferrer"
    style="display:block;width:100%;max-width:400px;margin:0 auto;box-sizing:border-box;text-align:center;text-decoration:none;">
    Return to Dashboard
 </a>
@@ -575,19 +577,17 @@ function bindEvents(){
     });
 
     document.getElementById('fci-btn-dashboard')?.addEventListener('click', function (e) {
-      e.preventDefault();
       var ret = { type: 'FCI_RETURN_TO_DASHBOARD', instrument: 'FCI', portalUrl: PORTAL_URL };
       if (window.opener && !window.opener.closed) {
+        e.preventDefault();
         try { window.opener.postMessage(ret, '*'); } catch (x) {}
         window.opener.focus();
         window.close();
         return;
       }
-      if (window.parent && window.parent !== window) {
-        try { window.parent.postMessage(ret, '*'); } catch (x) {}
-        return;
-      }
-      window.location.href = PORTAL_URL;
+      try {
+        if (window.parent && window.parent !== window) window.parent.postMessage(ret, '*');
+      } catch (x) {}
     });
   }
 }
