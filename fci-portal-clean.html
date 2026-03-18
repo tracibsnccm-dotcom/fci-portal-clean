@@ -277,6 +277,8 @@ NO STRIPE / NO PAYMENTS / NO GATING
 <script>
 const caseType = new URLSearchParams(window.location.search).get('caseType') || 'active';
 
+const RRF_URL = "https://recovery-risk-forecaster.vercel.app/";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
@@ -562,16 +564,32 @@ function bind(id,fn){ const el=document.getElementById(id); if(el) el.addEventLi
 render();
 
 function goToNext() {
+  console.log("NEXT CLICKED");
+
   if (window.opener && !window.opener.closed) {
-    window.opener.postMessage(
-      { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType },
-      '*'
-    );
+    window.opener.postMessage({
+      type: 'GO_TO_NEXT_ASSESSMENT',
+      instrument: 'FCI',
+      nextInstrument: 'RRF',
+      caseType
+    }, '*');
+
     window.opener.focus();
   }
+
+  // FORCE open RRF no matter what
+  const url = `${RRF_URL}?caseType=${caseType}&instrument=RRF`;
+  console.log("Opening RRF:", url);
+  window.open(url, '_blank');
 }
+
 function returnToDashboard() {
-  if (window.opener && !window.opener.closed) { window.opener.focus(); }
+  console.log("RETURN CLICKED");
+
+  if (window.opener && !window.opener.closed) {
+    window.opener.focus();
+  }
+
   window.close();
 }
 </script>
