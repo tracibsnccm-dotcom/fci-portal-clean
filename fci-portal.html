@@ -21,24 +21,7 @@ NO STRIPE / NO PAYMENTS / NO GATING
     select { -webkit-appearance: none; appearance: none; }
     input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.5; cursor: pointer; }
 
-    /* ── Print styles ─────────────────────────────────────────────────── */
     .no-print { }
-    .print-footer { display: none; }
-
-    @media print {
-      .no-print { display: none !important; }
-      body { background: #fff !important; }
-      .print-root { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-      .print-card { box-shadow: none !important; border: 1px solid #ccc !important; break-inside: avoid; page-break-inside: avoid; }
-      .print-body-text { color: #111 !important; }
-      .print-badge { background: #fff !important; border: 1px solid #555 !important; color: #111 !important; }
-      .print-bar-fill { background-color: #333 !important; }
-      .print-bar-fill-weak { background-color: #000 !important; }
-      .print-summary-tile { background: #fff !important; border: 1px solid #aaa !important; border-top: 3px solid #333 !important; }
-      .print-bullet { color: #333 !important; }
-      .print-footer { display: block !important; }
-      @page { margin: 0.75in 0.75in 0.85in 0.75in; size: letter portrait; }
-    }
 
     /* ── Layout helpers ───────────────────────────────────────────────── */
     .app-header {
@@ -321,42 +304,9 @@ NO STRIPE / NO PAYMENTS / NO GATING
     .report-right-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #6a8aaa; display: block; margin-bottom: 4px; }
     .report-right-sub { font-size: 11px; color: #5a7a9a; }
 
-    /* Pricing card */
-    .price-card { padding: 24px 20px; position: relative; }
-    .price-featured { border: 2px solid #b8922a !important; box-shadow: 0 4px 16px rgba(12,28,52,0.14); }
-    .price-popular-badge {
-      position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
-      background: #b8922a; color: #0c1c34;
-      font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-      padding: 3px 10px; white-space: nowrap;
-    }
-    .price-label { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; display: block; margin-bottom: 10px; }
-    .price-amount-row { display: flex; align-items: baseline; gap: 2px; margin-bottom: 6px; }
-    .price-amount { font-size: 24px; }
-    .price-unit { font-size: 11px; }
-    .price-reports { font-size: 12px; margin: 0 0 16px; }
-    .price-cta { padding-top: 10px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
-
-    /* Usage panel */
-    .usage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-
-    /* Print footer */
-    .print-footer-text { font-size: 11px; color: #666; font-style: italic; margin: 0; text-align: center; }
-
     /* Vuln section separator */
     .vuln-section-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #9aabb8; display: block; margin-bottom: 18px; }
     .vuln-indicator-label { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #0c1c34; display: block; margin-bottom: 12px; }
-
-    /* Back nav bar on final screen */
-    .final-nav-bar {
-      background: #fff;
-      border-bottom: 1px solid #e8e3d8;
-      padding: 12px 48px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .final-nav-hint { font-size: 12px; color: #9aabb8; }
 
     hr.light { border: none; border-top: 1px solid #e8e3d8; }
 
@@ -369,7 +319,6 @@ NO STRIPE / NO PAYMENTS / NO GATING
       .score-badge { width: auto; }
       .report-header-inner { flex-direction: column; gap: 16px; }
       .report-header { padding: 24px 20px; }
-      .final-nav-bar { padding: 12px 20px; flex-direction: column; gap: 10px; align-items: flex-start; }
     }
   </style>
 </head>
@@ -377,14 +326,11 @@ NO STRIPE / NO PAYMENTS / NO GATING
 <div id="app"></div>
 
 <script>
-// Read case type from portal launch URL (?caseType=active|closed)
 const caseType = new URLSearchParams(window.location.search).get('caseType') || 'active';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
-const FONT = "'Georgia','Times New Roman',serif";
-
 const DOMAINS = [
   { id:"physical", label:"Physical Wellness",
     subtitle:"Evaluates the client's physical health, functional mobility, pain levels, and medical stability as they relate to daily functioning and work capacity.",
@@ -489,28 +435,10 @@ const INJURY_TYPES = [
   {value:"medical",label:"Medical Complication"},
   {value:"other",label:"Other"}
 ];
-const PRICING = [
-  {id:"individual",label:"Individual Analysis",price:"$295",unit:"per analysis",reports:"Single use",featured:false},
-  {id:"basic",label:"Basic Plan",price:"$495",unit:"/month",reports:"Up to 5 analyses",featured:false},
-  {id:"pro",label:"Professional Plan",price:"$895",unit:"/month",reports:"Up to 20 analyses",featured:true},
-  {id:"enterprise",label:"Enterprise Plan",price:"$1,795",unit:"/month",reports:"Unlimited analyses",featured:false}
-];
-const BLOCKED = ["gmail.com","yahoo.com","hotmail.com","outlook.com","icloud.com","aol.com","proton.me","protonmail.com","mail.com","gmx.com","msn.com","live.com","me.com","att.net","comcast.net","verizon.net","sbcglobal.net","ymail.com"];
-const FREE_LIMIT = 3;
-const USAGE_STORE = {};
-
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-function isPersonalEmail(e){ return BLOCKED.includes((e.trim().toLowerCase().split("@")[1]||"")); }
-function isValidEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim()); }
-function getUsage(e){ return USAGE_STORE[e.trim().toLowerCase()]||0; }
-function incUsage(e){ const k=e.trim().toLowerCase(); USAGE_STORE[k]=(USAGE_STORE[k]||0)+1; return USAGE_STORE[k]; }
 function fmtDate(d){ const mm=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0"); return mm+"/"+dd+"/"+d.getFullYear(); }
-function buildPreparedFor(a,f){
-  const at=(a||"").trim(),ft=(f||"").trim();
-  if(at&&ft) return at+", "+ft; if(at) return at; if(ft) return ft; return "Registered User";
-}
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
 function computeFVI({incomeRange,hasDependents,isSoleEarner,painScore,psychScore}){
@@ -557,14 +485,11 @@ function buildInterp({fciScore,primaryDomains,fvi,painScore,psychScore}){
 // ─────────────────────────────────────────────────────────────────────────────
 const S = {
   screen:"intro",
-  gate:{attorneyName:"",firmName:"",email:""},
-  emailError:"",
   ctx:{clientRef:"",doi:"",injuryType:""},
   fviFields:{incomeRange:"",hasDependents:"",isSoleEarner:""},
   vulnScores:{pain:null,psych:null},
   scores:{physical:null,psychological:null,psychosocial:null,professional:null},
-  analysisDate:"",
-  usageCount:0
+  analysisDate:""
 };
 
 function setState(patch){ Object.assign(S,patch); render(); }
@@ -572,7 +497,7 @@ function setState(patch){ Object.assign(S,patch); render(); }
 // ─────────────────────────────────────────────────────────────────────────────
 // HTML BUILDERS
 // ─────────────────────────────────────────────────────────────────────────────
-function appHeader(){ return `<header class="app-header no-print"><div class="app-header-left"><span class="app-header-brand">Reconcile Care Management Services</span><span class="app-header-div">|</span><span class="app-header-title">Functional Capacity Index</span></div><span class="app-header-right">Care Management Assessment Tool</span></header>`; }
+function appHeader(){ return `<header class="app-header no-print"><div class="app-header-left"><span class="app-header-brand">Reconcile Care Management Services</span><span class="app-header-div">|</span><span class="app-header-title">Functional Capacity Index</span></div><span class="app-header-right">Portal Assessment</span></header>`; }
 
 const PROGRESS_STEPS=["intro","context","vuln-intro","vuln","domain-0","domain-1","domain-2","domain-3"];
 function progressBar(screen){
@@ -595,33 +520,23 @@ function dateInput(id,val){
 }
 
 function interpBlock(paras){
-  return `<div class="interp-block print-card"><span class="section-label">Professional Interpretation</span>`+paras.map(p=>`<p class="interp-para print-body-text">${esc(p)}</p>`).join("")+`</div>`;
+  return `<div class="interp-block"><span class="section-label">Professional Interpretation</span>`+paras.map(p=>`<p class="interp-para">${esc(p)}</p>`).join("")+`</div>`;
 }
 function reassessBlock(){
-  return `<div class="reassess-block print-card"><span class="section-label">Why Reassessment Matters</span><p class="interp-para print-body-text">This analysis reflects the client's condition at the time it is completed. Repeated Functional Capacity Index Analyses can help document changes in wellness, stability, and role sustainability over the life of a case.</p><span class="section-sublabel">Recommended Reassessment Points</span><ul class="reassess-list">`+["After a major treatment change","After work status changes","Before mediation or settlement","When new instability develops"].map(i=>`<li class="reassess-item"><span class="reassess-bullet print-bullet">&#9670;</span><span class="print-body-text">${esc(i)}</span></li>`).join("")+`</ul></div>`;
+  return `<div class="reassess-block"><span class="section-label">Why Reassessment Matters</span><p class="interp-para">This analysis reflects the client's condition at the time it is completed. Repeated Functional Capacity Index Analyses can help document changes in wellness, stability, and role sustainability over the life of a case.</p><span class="section-sublabel">Recommended Reassessment Points</span><ul class="reassess-list">`+["After a major treatment change","After work status changes","Before mediation or settlement","When new instability develops"].map(i=>`<li class="reassess-item"><span class="reassess-bullet">&#9670;</span><span>${esc(i)}</span></li>`).join("")+`</ul></div>`;
 }
 function disclaimerBlock(){
-  return `<div class="disclaimer-block print-card"><p class="disclaimer-text">The Functional Capacity Index is a structured care management assessment framework developed by Reconcile Care Management Services. It is not a scientific, diagnostic, or clinical instrument and does not replace medical evaluation, clinical judgment, psychological assessment, or legal analysis. Results are intended to support care management documentation and case support purposes only. All assessments should be interpreted by a qualified care management professional in the appropriate clinical and legal context.</p></div>`;
+  return `<div class="disclaimer-block"><p class="disclaimer-text">The Functional Capacity Index is a structured care management assessment framework developed by Reconcile Care Management Services. It is not a scientific, diagnostic, or clinical instrument and does not replace medical evaluation, clinical judgment, psychological assessment, or legal analysis. Results are intended to support care management documentation and case support purposes only. All assessments should be interpreted by a qualified care management professional in the appropriate clinical and legal context.</p></div>`;
 }
 
 function scoreBarRow(d,s,isWeakest){
   const cl=FCI_CLASS[s];
-  return `<div class="score-row"><span class="score-row-label print-body-text">${esc(d.label)}</span><div class="score-bar-track"><div class="score-bar-fill ${isWeakest?"print-bar-fill-weak":"print-bar-fill"}" style="width:${(s/5)*100}%;background:${isWeakest?"#7a2e10":"#0c1c34"}"></div></div><span class="score-num print-body-text" style="color:${isWeakest?"#7a2e10":"#0c1c34"};font-weight:${isWeakest?"bold":"normal"}">${s}</span><span class="score-badge print-badge" style="color:${cl.text};background:${cl.bg};border:1px solid ${cl.border}">${esc(cl.label)}</span></div>`;
+  return `<div class="score-row"><span class="score-row-label">${esc(d.label)}</span><div class="score-bar-track"><div class="score-bar-fill" style="width:${(s/5)*100}%;background:${isWeakest?"#7a2e10":"#0c1c34"}"></div></div><span class="score-num" style="color:${isWeakest?"#7a2e10":"#0c1c34"};font-weight:${isWeakest?"bold":"normal"}">${s}</span><span class="score-badge" style="color:${cl.text};background:${cl.bg};border:1px solid ${cl.border}">${esc(cl.label)}</span></div>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SCREEN RENDERERS
 // ─────────────────────────────────────────────────────────────────────────────
-function screenGate(){
-  return appHeader()+`<div class="container"><span class="eyebrow">Access Registration</span><h2 class="section-title">Professional Information</h2><p class="subtitle">This tool is available to licensed attorneys and their authorized staff. Please provide your professional contact information to access the assessment. A company or firm email address is required.</p><div class="card">`+
-    fieldWrap("Attorney Name",true,textInput("gate-name",S.gate.attorneyName,"Full name"))+
-    fieldWrap("Firm Name",true,textInput("gate-firm",S.gate.firmName,"Law firm or organization name"))+
-    fieldWrap("Professional / Firm Email Address",true,textInput("gate-email",S.gate.email,"name@yourfirm.com","email"),"A professional or firm email address is required. Personal email accounts are not accepted.",S.emailError)+
-    `<div class="callout" style="margin-top:8px;margin-bottom:24px"><p style="font-size:13px;color:#3a4a5a;line-height:1.7;margin:0">This tool includes <strong>3 complimentary Functional Capacity Index Analyses</strong> per registered email address. Subscription plans are available for ongoing access.</p></div>
-    <div class="field-wrap" style="margin-bottom:24px"><label class="field-label" style="display:flex;align-items:flex-start;gap:10px;font-weight:normal;cursor:pointer"><input type="checkbox" id="gate-terms" style="margin-top:3px;flex-shrink:0" /> I confirm that I am a legal professional or member of a law firm and that the information provided is accurate.</label></div>
-    <div style="display:flex;justify-content:flex-end"><button type="button" class="btn-primary" id="gate-submit" ${!(S.gate.attorneyName.trim()&&S.gate.firmName.trim()&&S.gate.email.trim())?"disabled":""}>Continue &rarr;</button></div></div></div>`;
-}
-
 function screenIntro(){
   return appHeader()+`<div class="container">`+progressBar("intro")+`<div class="card"><span class="eyebrow">Care Management Assessment Tool</span><h1 style="font-size:34px;font-weight:normal;color:#0c1c34;margin:0 0 6px;letter-spacing:0.01em">Functional Capacity Index</h1><p style="font-size:17px;color:#3a4a5a;margin:0 0 32px;line-height:1.6">A structured evaluation of holistic wellness across the 4Ps of Wellness</p><hr class="light" style="margin:0 0 32px"><p style="font-size:15px;line-height:1.85;color:#0e1c2e;margin:0 0 18px">The <strong>Functional Capacity Index (FCI)</strong> is a structured care management assessment tool developed by Reconcile Care Management Services. This analysis evaluates how a client's current condition across the 4Ps of Wellness may affect their ability to sustain work or continue in a professional or occupational role.</p><p style="font-size:15px;line-height:1.85;color:#0e1c2e;margin:0 0 32px">This assessment is designed to be completed thoughtfully. The value of this analysis depends on responses that reflect what is actually being experienced — not what is desired or hoped for. Estimated completion time: approximately 8–10 minutes.</p><div class="grid-4p">`+
     [{p:"Physical",d:"Functional mobility, pain, and medical stability"},{p:"Psychological",d:"Emotional regulation, mental health, and cognitive functioning"},{p:"Psychosocial",d:"Support systems, relationships, and environmental stability"},{p:"Professional",d:"Occupational functioning, work capacity, and financial stability"}].map(x=>`<div class="fourp-card"><span class="fourp-label">${x.p} Wellness</span><span class="fourp-desc">${x.d}</span></div>`).join("")+
@@ -677,38 +592,7 @@ function screenDomain(idx){
     html+=`<div class="level-card${active?" active":""}" data-domain="${dom.id}" data-score="${lv.score}"><div class="level-num${active?" active":""}">${lv.score}</div><div><p class="level-title${active?" active":""}">${esc(lv.title)}</p><p class="level-desc">${esc(lv.description)}</p></div></div>`;
   });
   const last=idx===DOMAINS.length-1;
-  html+=`<div class="nav-row no-print"><button type="button" class="btn-ghost" id="dom-back">&larr; Back</button><span class="nav-status">${cur?"Level "+cur+" selected":"No level selected"}</span><button type="button" class="btn-primary" id="dom-next" ${cur?"":"disabled"}>${last?"Review Analysis &rarr;":"Next Domain &rarr;"}</button></div></div>`;
-  return html;
-}
-
-function screenReview(){
-  const sv=DOMAINS.map(d=>S.scores[d.id]).filter(Boolean);
-  const minS=sv.length===4?Math.min(...sv):null;
-  const weak=minS?DOMAINS.filter(d=>S.scores[d.id]===minS).map(d=>d.label):[];
-  const fvi=computeFVI({...S.fviFields,painScore:S.vulnScores.pain,psychScore:S.vulnScores.psych});
-  const paras=buildInterp({fciScore:minS,primaryDomains:weak,fvi,painScore:S.vulnScores.pain,psychScore:S.vulnScores.psych});
-  const doiDisp=S.ctx.doi?fmtDate(new Date(S.ctx.doi+"T12:00:00")):null;
-
-  let html=appHeader()+`<div class="container"><span class="eyebrow">Analysis Review</span><h2 class="section-title">Review Before Generating Final Analysis</h2><p style="font-size:15px;color:#3a4a5a;line-height:1.7;margin:0 0 32px">Review the interpretation and input summary below. When ready, click <strong>Generate Final Analysis</strong> to complete the assessment.</p>`;
-  html+=interpBlock(paras)+reassessBlock();
-  html+=`<div class="card print-card" style="margin-bottom:24px"><span class="section-label">Summary of Inputs</span><span class="section-sublabel">4Ps Domain Scores</span>`;
-  DOMAINS.forEach(d=>{ const s=S.scores[d.id]; html+=scoreBarRow(d,s,s===minS); });
-  html+=`<div style="border-top:1px solid #e8e3d8;padding-top:18px;margin-top:18px"><span class="section-sublabel">Vulnerability Indicators</span><div class="grid-context-2">`;
-  VULN_INDICATORS.forEach(ind=>{ const s=S.vulnScores[ind.id]; const t=ind.levels.find(l=>l.score===s)?.title||"—"; html+=`<div class="data-cell"><span class="data-cell-label">${esc(ind.label)}</span><span class="data-cell-value">${s} — ${esc(t)}</span></div>`; });
-  html+=`</div></div><div style="border-top:1px solid #e8e3d8;padding-top:18px;margin-top:18px"><span class="section-sublabel">Financial &amp; Household Context</span><div class="grid-context-3">`;
-  [[S.fviFields.incomeRange,INCOME_RANGES,"Income Range"],[S.fviFields.hasDependents,YES_NO,"Dependents"],[S.fviFields.isSoleEarner,YES_NO,"Sole Income Earner"]].forEach(([v,opts,lbl])=>{
-    const disp=(opts.find(o=>o.value===v)||{label:"—"}).label;
-    html+=`<div class="data-cell"><span class="data-cell-label">${esc(lbl)}</span><span class="data-cell-value">${esc(disp)}</span></div>`;
-  });
-  html+=`</div></div>`;
-  if(S.ctx.clientRef||doiDisp||S.ctx.injuryType){
-    html+=`<div style="border-top:1px solid #e8e3d8;padding-top:16px;margin-top:16px;display:flex;gap:32px;flex-wrap:wrap">`;
-    if(S.ctx.clientRef) html+=`<div><span class="data-cell-label">Client Reference</span><span class="data-cell-value">${esc(S.ctx.clientRef)}</span></div>`;
-    if(doiDisp) html+=`<div><span class="data-cell-label">Date of Injury</span><span class="data-cell-value">${esc(doiDisp)}</span></div>`;
-    if(S.ctx.injuryType){ const t=(INJURY_TYPES.find(x=>x.value===S.ctx.injuryType)||{label:S.ctx.injuryType}).label; html+=`<div><span class="data-cell-label">Injury Type</span><span class="data-cell-value">${esc(t)}</span></div>`; }
-    html+=`</div>`;
-  }
-  html+=`</div><div class="nav-row no-print"><button type="button" class="btn-ghost" id="rev-back">&larr; Back to Assessment</button><button type="button" class="btn-primary" id="rev-next">Generate Final Analysis &rarr;</button></div></div>`;
+  html+=`<div class="nav-row no-print"><button type="button" class="btn-ghost" id="dom-back">&larr; Back</button><span class="nav-status">${cur?"Level "+cur+" selected":"No level selected"}</span><button type="button" class="btn-primary" id="dom-next" ${cur?"":"disabled"}>${last?"Generate Final Analysis &rarr;":"Next Domain &rarr;"}</button></div></div>`;
   return html;
 }
 
@@ -720,15 +604,14 @@ function screenFinal(){
   const fvi=computeFVI({...S.fviFields,painScore:S.vulnScores.pain,psychScore:S.vulnScores.psych});
   const fviC=FVI_COLOR[fvi];
   const paras=buildInterp({fciScore:minS,primaryDomains:weak,fvi,painScore:S.vulnScores.pain,psychScore:S.vulnScores.psych});
-  const prepFor=buildPreparedFor(S.gate.attorneyName,S.gate.firmName);
+  const prepFor="Care Management Portal";
   const doiDisp=S.ctx.doi?fmtDate(new Date(S.ctx.doi+"T12:00:00")):null;
 
   let html=appHeader();
-  html+=`<div class="final-nav-bar no-print"><button type="button" class="btn-ghost" id="fin-back">&larr; Back to Review</button></div>`;
-  html+=`<div class="print-root" style="max-width:860px;margin:0 auto;padding:48px 32px 80px">`;
+  html+=`<div class="no-print" style="max-width:860px;margin:0 auto;padding:48px 32px 80px">`;
 
   // Report header
-  html+=`<div class="report-header print-card"><div class="report-header-inner"><div><span class="report-brand">Reconcile Care Management Services</span><h1 class="report-title">Functional Capacity Index Analysis</h1><div class="report-meta">`;
+  html+=`<div class="report-header"><div class="report-header-inner"><div><span class="report-brand">Reconcile Care Management Services</span><h1 class="report-title">Functional Capacity Index Analysis</h1><div class="report-meta">`;
   [["Prepared for",prepFor],["Prepared by","Reconcile Care Management Services"],["Analysis Date",S.analysisDate]].forEach(([l,v])=>{
     html+=`<div class="report-meta-row"><span class="report-meta-label">${esc(l)}</span><span class="report-meta-value">${esc(v)}</span></div>`;
   });
@@ -738,36 +621,30 @@ function screenFinal(){
 
   // FCI / FVI / Primary tiles
   html+=`<div class="grid-tiles-3">`;
-  html+=`<div class="summary-tile print-summary-tile" style="background:${fci.bg};border:1px solid ${fci.border};border-top-color:${fci.text}"><span class="summary-tile-label">Functional Capacity Index</span><div class="summary-tile-score" style="color:${fci.text}">${minS}</div><div class="summary-tile-status" style="color:${fci.text}">${esc(fci.label)}</div><div class="summary-tile-sub">Score: ${minS} / 5 — Lowest Domain</div></div>`;
-  html+=`<div class="summary-tile print-summary-tile" style="background:${fviC.bg};border:1px solid ${fviC.border};border-top-color:${fviC.text}"><span class="summary-tile-label">Functional Vulnerability Indicator</span><div class="summary-tile-fvi" style="color:${fviC.text}">${esc(fvi)}</div><div class="summary-tile-fvi-sub" style="color:${fviC.text}">Vulnerability Pressure Level</div><div class="summary-tile-sub">Contextual &middot; Does Not Affect FCI</div></div>`;
-  html+=`<div class="summary-tile print-summary-tile" style="background:#fdf0ea;border:1px solid #e8b89a;border-top-color:#7a2e10"><span class="summary-tile-label">Primary Instability Domain</span>${weak.map((d,i)=>`<div class="summary-tile-primary" style="font-size:${i===0?"15px":"13px"};color:#4a1a0a">${esc(d)}</div>`).join("")}<div class="summary-tile-sub" style="margin-top:10px">Lowest Scoring Domain</div></div>`;
+  html+=`<div class="summary-tile" style="background:${fci.bg};border:1px solid ${fci.border};border-top-color:${fci.text}"><span class="summary-tile-label">Functional Capacity Index</span><div class="summary-tile-score" style="color:${fci.text}">${minS}</div><div class="summary-tile-status" style="color:${fci.text}">${esc(fci.label)}</div><div class="summary-tile-sub">Score: ${minS} / 5 — Lowest Domain</div></div>`;
+  html+=`<div class="summary-tile" style="background:${fviC.bg};border:1px solid ${fviC.border};border-top-color:${fviC.text}"><span class="summary-tile-label">Functional Vulnerability Indicator</span><div class="summary-tile-fvi" style="color:${fviC.text}">${esc(fvi)}</div><div class="summary-tile-fvi-sub" style="color:${fviC.text}">Vulnerability Pressure Level</div><div class="summary-tile-sub">Contextual &middot; Does Not Affect FCI</div></div>`;
+  html+=`<div class="summary-tile" style="background:#fdf0ea;border:1px solid #e8b89a;border-top-color:#7a2e10"><span class="summary-tile-label">Primary Instability Domain</span>${weak.map((d,i)=>`<div class="summary-tile-primary" style="font-size:${i===0?"15px":"13px"};color:#4a1a0a">${esc(d)}</div>`).join("")}<div class="summary-tile-sub" style="margin-top:10px">Lowest Scoring Domain</div></div>`;
   html+=`</div>`;
 
   // Domain score summary
-  html+=`<div class="card print-card" style="margin-bottom:24px"><span class="section-label">Domain Score Summary — 4Ps of Wellness</span>`;
+  html+=`<div class="card" style="margin-bottom:24px"><span class="section-label">Domain Score Summary — 4Ps of Wellness</span>`;
   DOMAINS.forEach(d=>{ html+=scoreBarRow(d,S.scores[d.id],S.scores[d.id]===minS); });
   html+=`</div>`;
 
   // Vulnerability context
-  html+=`<div class="card print-card" style="margin-bottom:24px"><span class="section-label">Functional Vulnerability Context</span><div class="grid-context-3">`;
+  html+=`<div class="card" style="margin-bottom:24px"><span class="section-label">Functional Vulnerability Context</span><div class="grid-context-3">`;
   [[S.fviFields.incomeRange,INCOME_RANGES,"Income Range"],[S.fviFields.hasDependents,YES_NO,"Dependents"],[S.fviFields.isSoleEarner,YES_NO,"Sole Income Earner"]].forEach(([v,opts,lbl])=>{
     const disp=(opts.find(o=>o.value===v)||{label:"—"}).label;
-    html+=`<div class="data-cell"><span class="data-cell-label">${esc(lbl)}</span><span class="data-cell-value print-body-text">${esc(disp)}</span></div>`;
+    html+=`<div class="data-cell"><span class="data-cell-label">${esc(lbl)}</span><span class="data-cell-value">${esc(disp)}</span></div>`;
   });
   html+=`</div><div class="grid-context-2" style="margin-top:12px">`;
-  VULN_INDICATORS.forEach(ind=>{ const s=S.vulnScores[ind.id]; const t=ind.levels.find(l=>l.score===s)?.title||"—"; html+=`<div class="data-cell"><span class="data-cell-label">${esc(ind.label)}</span><span class="data-cell-value print-body-text">${s} — ${esc(t)}</span></div>`; });
-  html+=`</div><p class="print-body-text" style="font-size:13px;color:#3a4a5a;line-height:1.8;margin:16px 0 0">The Functional Vulnerability Indicator identifies circumstances that may create pressure to return to work or resume responsibilities before full recovery or medical release. It does not change the Functional Capacity Index score.</p></div>`;
+  VULN_INDICATORS.forEach(ind=>{ const s=S.vulnScores[ind.id]; const t=ind.levels.find(l=>l.score===s)?.title||"—"; html+=`<div class="data-cell"><span class="data-cell-label">${esc(ind.label)}</span><span class="data-cell-value">${s} — ${esc(t)}</span></div>`; });
+  html+=`</div><p style="font-size:13px;color:#3a4a5a;line-height:1.8;margin:16px 0 0">The Functional Vulnerability Indicator identifies circumstances that may create pressure to return to work or resume responsibilities before full recovery or medical release. It does not change the Functional Capacity Index score.</p></div>`;
 
   html+=interpBlock(paras)+reassessBlock()+disclaimerBlock();
 
-  // Print footer (print only)
-  html+=`<div class="print-footer" style="border-top:1px solid #ccc;padding-top:12px;margin-top:8px"><p class="print-footer-text">Functional Capacity Index Analysis generated by Reconcile Care Management Services</p></div>`;
-
-  // UI-only block
-  html+=`<div class="no-print">`;
-  html+=`<div style="margin-top:24px;padding-top:20px;border-top:1px solid #e0ddd4;display:flex;gap:12px;justify-content:center;"><button onclick="goToNext();" style="font-family:'Georgia','Times New Roman',serif;font-size:13px;font-weight:600;letter-spacing:0.08em;padding:10px 24px;background:#b8922a;color:#fff;border:none;cursor:pointer;">Continue to Next Assessment</button><button onclick="returnToDashboard();" style="font-family:'Georgia','Times New Roman',serif;font-size:13px;font-weight:600;letter-spacing:0.08em;padding:10px 24px;background:#fff;color:#b8922a;border:1.5px solid #b8922a;cursor:pointer;">Return to Dashboard</button></div>`;
-  html+=`</div>`; // end no-print
-  html+=`</div>`; // end print-root
+  html+=`<div style="margin-top:32px;padding-top:24px;border-top:1px solid #e0ddd4;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;"><button type="button" id="fci-btn-next" style="font-family:'Georgia','Times New Roman',serif;font-size:13px;font-weight:600;letter-spacing:0.08em;padding:10px 24px;background:#b8922a;color:#fff;border:none;cursor:pointer;">Continue to Next Assessment</button><button type="button" id="fci-btn-dashboard" style="font-family:'Georgia','Times New Roman',serif;font-size:13px;font-weight:600;letter-spacing:0.08em;padding:10px 24px;background:#fff;color:#b8922a;border:1.5px solid #b8922a;cursor:pointer;">Return to Dashboard</button></div>`;
+  html+=`</div>`;
   return html;
 }
 
@@ -784,7 +661,6 @@ function render(){
   else if(sc==="vuln-intro") html=screenVulnIntro();
   else if(sc==="vuln") html=screenVuln();
   else if(sc.startsWith("domain-")) html=screenDomain(parseInt(sc.split("-")[1]));
-  else if(sc==="review") html=screenReview();
   else if(sc==="final") html=screenFinal();
 
   app.innerHTML=html;
@@ -807,12 +683,6 @@ function bindEvents(){
   // Live input sync helpers
   function live(id,fn){ const el=document.getElementById(id); if(el) el.addEventListener(el.tagName==="SELECT"?"change":"input",fn); }
 
-  if(sc==="gate"){
-    live("gate-name",e=>{ S.gate.attorneyName=e.target.value; updateGateBtn(); });
-    live("gate-firm",e=>{ S.gate.firmName=e.target.value; updateGateBtn(); });
-    live("gate-email",e=>{ S.gate.email=e.target.value; S.emailError=""; updateGateBtn(); });
-    bind("gate-submit",()=>handleGate());
-  }
   if(sc==="intro"){
     bind("intro-back",()=>{ /* portal is the entry point — no back from intro */ });
     bind("intro-next",()=>setState({screen:"context"}));
@@ -852,44 +722,18 @@ function bindEvents(){
       });
     });
     bind("dom-back",()=>{ if(idx===0) setState({screen:"vuln"}); else setState({screen:"domain-"+(idx-1)}); });
-    bind("dom-next",()=>{ if(idx<DOMAINS.length-1) setState({screen:"domain-"+(idx+1)}); else setState({screen:"review"}); });
-  }
-  if(sc==="review"){
-    bind("rev-back",()=>setState({screen:"domain-"+(DOMAINS.length-1)}));
-    bind("rev-next",()=>{
-      S.analysisDate=fmtDate(new Date());
-      S.usageCount=incUsage(S.gate.email);
-      setState({screen:"final"});
+    bind("dom-next",()=>{
+      if(idx<DOMAINS.length-1) setState({screen:"domain-"+(idx+1)});
+      else { S.analysisDate=fmtDate(new Date()); setState({screen:"final"}); }
     });
   }
   if(sc==="final"){
-    bind("fin-back",()=>setState({screen:"review"}));
+    bind("fci-btn-next",()=>goToNext());
+    bind("fci-btn-dashboard",()=>returnToDashboard());
   }
 }
 
 function bind(id,fn){ const el=document.getElementById(id); if(el) el.addEventListener("click",fn); }
-
-function updateGateBtn(){
-  const btn=document.getElementById("gate-submit");
-  if(!btn) return;
-  const ok=S.gate.attorneyName.trim()&&S.gate.firmName.trim()&&S.gate.email.trim();
-  btn.disabled=!ok;
-}
-
-function handleGate(){
-  S.emailError="";
-  const email=S.gate.email.trim();
-  if(!isValidEmail(email)){ S.emailError="Please enter a valid email address."; render(); return; }
-  if(isPersonalEmail(email)){ S.emailError="Access is available only to verified professional or firm email addresses.\nPlease enter your law firm or company email to continue."; render(); return; }
-  S.usageCount=getUsage(email);
-  setState({screen:"intro"});
-}
-
-function startFciCheckout(plan){
-  // Wire to your checkout (e.g. Supabase Edge Function) when ready.
-  console.log("startFciCheckout", plan);
-}
-window.startFciCheckout = startFciCheckout;
 
 // Initial render
 render();
@@ -897,11 +741,10 @@ render();
 function goToNext() {
   if (window.opener && !window.opener.closed) {
     window.opener.postMessage(
-      { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', caseType },
+      { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType },
       '*'
     );
-    // Do NOT close this tab — portal needs to call window.open() for next tool
-    // before this context is destroyed. Portal will open the next tool.
+    window.opener.focus();
   }
 }
 function returnToDashboard() {
