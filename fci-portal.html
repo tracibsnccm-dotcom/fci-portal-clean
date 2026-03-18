@@ -592,65 +592,48 @@ function screenDomain(idx){
     html+=`<div class="level-card${active?" active":""}" data-domain="${dom.id}" data-score="${lv.score}"><div class="level-num${active?" active":""}">${lv.score}</div><div><p class="level-title${active?" active":""}">${esc(lv.title)}</p><p class="level-desc">${esc(lv.description)}</p></div></div>`;
   });
   const last=idx===DOMAINS.length-1;
-  html+=`<div class="nav-row no-print"><button type="button" class="btn-ghost" id="dom-back">&larr; Back</button><span class="nav-status">${cur?"Level "+cur+" selected":"No level selected"}</span><button type="button" class="btn-primary" id="dom-next" ${cur?"":"disabled"}>${last?"Generate Final Analysis &rarr;":"Next Domain &rarr;"}</button></div></div>`;
+  html+=`<div class="nav-row no-print"><button type="button" class="btn-ghost" id="dom-back">&larr; Back</button><span class="nav-status">${cur?"Level "+cur+" selected":"No level selected"}</span><button type="button" class="btn-primary" id="dom-next" ${cur?"":"disabled"}>${last?"Finish assessment &rarr;":"Next Domain &rarr;"}</button></div></div>`;
   return html;
 }
 
-function screenFinal(){
-  const sv=DOMAINS.map(d=>S.scores[d.id]).filter(Boolean);
-  const minS=Math.min(...sv);
-  const weak=DOMAINS.filter(d=>S.scores[d.id]===minS).map(d=>d.label);
-  const fci=FCI_CLASS[minS];
-  const fvi=computeFVI({...S.fviFields,painScore:S.vulnScores.pain,psychScore:S.vulnScores.psych});
-  const fviC=FVI_COLOR[fvi];
-  const paras=buildInterp({fciScore:minS,primaryDomains:weak,fvi,painScore:S.vulnScores.pain,psychScore:S.vulnScores.psych});
-  const prepFor="Care Management Portal";
-  const doiDisp=S.ctx.doi?fmtDate(new Date(S.ctx.doi+"T12:00:00")):null;
+function screenComplete() {
+  return `
+    <div class="container">
+      <div class="card" style="text-align:center;">
+        <h2 class="section-title">Assessment Complete</h2>
+        <p class="subtitle">
+          This assessment has been completed successfully.
+          Report access is managed through the portal.
+        </p>
 
-  let html=appHeader();
-  html+=`<div class="no-print" style="max-width:860px;margin:0 auto;padding:48px 32px 80px">`;
+        <div style="margin-top:32px; display:flex; gap:12px; justify-content:center;">
+          <button id="fci-btn-next" class="btn-primary">
+            Continue to Next Assessment
+          </button>
 
-  // Report header
-  html+=`<div class="report-header"><div class="report-header-inner"><div><span class="report-brand">Reconcile Care Management Services</span><h1 class="report-title">Functional Capacity Index Analysis</h1><div class="report-meta">`;
-  [["Prepared for",prepFor],["Prepared by","Reconcile Care Management Services"],["Analysis Date",S.analysisDate]].forEach(([l,v])=>{
-    html+=`<div class="report-meta-row"><span class="report-meta-label">${esc(l)}</span><span class="report-meta-value">${esc(v)}</span></div>`;
-  });
-  if(S.ctx.clientRef) html+=`<div class="report-meta-row"><span class="report-meta-label">Client Ref</span><span class="report-meta-value">${esc(S.ctx.clientRef)}</span></div>`;
-  if(doiDisp) html+=`<div class="report-meta-row"><span class="report-meta-label">Date of Injury</span><span class="report-meta-value">${esc(doiDisp)}</span></div>`;
-  html+=`</div></div><div class="report-right"><span class="report-right-label">4Ps of Wellness</span><span class="report-right-sub">Care Management Assessment Tool</span></div></div></div>`;
-
-  // FCI / FVI / Primary tiles
-  html+=`<div class="grid-tiles-3">`;
-  html+=`<div class="summary-tile" style="background:${fci.bg};border:1px solid ${fci.border};border-top-color:${fci.text}"><span class="summary-tile-label">Functional Capacity Index</span><div class="summary-tile-score" style="color:${fci.text}">${minS}</div><div class="summary-tile-status" style="color:${fci.text}">${esc(fci.label)}</div><div class="summary-tile-sub">Score: ${minS} / 5 — Lowest Domain</div></div>`;
-  html+=`<div class="summary-tile" style="background:${fviC.bg};border:1px solid ${fviC.border};border-top-color:${fviC.text}"><span class="summary-tile-label">Functional Vulnerability Indicator</span><div class="summary-tile-fvi" style="color:${fviC.text}">${esc(fvi)}</div><div class="summary-tile-fvi-sub" style="color:${fviC.text}">Vulnerability Pressure Level</div><div class="summary-tile-sub">Contextual &middot; Does Not Affect FCI</div></div>`;
-  html+=`<div class="summary-tile" style="background:#fdf0ea;border:1px solid #e8b89a;border-top-color:#7a2e10"><span class="summary-tile-label">Primary Instability Domain</span>${weak.map((d,i)=>`<div class="summary-tile-primary" style="font-size:${i===0?"15px":"13px"};color:#4a1a0a">${esc(d)}</div>`).join("")}<div class="summary-tile-sub" style="margin-top:10px">Lowest Scoring Domain</div></div>`;
-  html+=`</div>`;
-
-  // Domain score summary
-  html+=`<div class="card" style="margin-bottom:24px"><span class="section-label">Domain Score Summary — 4Ps of Wellness</span>`;
-  DOMAINS.forEach(d=>{ html+=scoreBarRow(d,S.scores[d.id],S.scores[d.id]===minS); });
-  html+=`</div>`;
-
-  // Vulnerability context
-  html+=`<div class="card" style="margin-bottom:24px"><span class="section-label">Functional Vulnerability Context</span><div class="grid-context-3">`;
-  [[S.fviFields.incomeRange,INCOME_RANGES,"Income Range"],[S.fviFields.hasDependents,YES_NO,"Dependents"],[S.fviFields.isSoleEarner,YES_NO,"Sole Income Earner"]].forEach(([v,opts,lbl])=>{
-    const disp=(opts.find(o=>o.value===v)||{label:"—"}).label;
-    html+=`<div class="data-cell"><span class="data-cell-label">${esc(lbl)}</span><span class="data-cell-value">${esc(disp)}</span></div>`;
-  });
-  html+=`</div><div class="grid-context-2" style="margin-top:12px">`;
-  VULN_INDICATORS.forEach(ind=>{ const s=S.vulnScores[ind.id]; const t=ind.levels.find(l=>l.score===s)?.title||"—"; html+=`<div class="data-cell"><span class="data-cell-label">${esc(ind.label)}</span><span class="data-cell-value">${s} — ${esc(t)}</span></div>`; });
-  html+=`</div><p style="font-size:13px;color:#3a4a5a;line-height:1.8;margin:16px 0 0">The Functional Vulnerability Indicator identifies circumstances that may create pressure to return to work or resume responsibilities before full recovery or medical release. It does not change the Functional Capacity Index score.</p></div>`;
-
-  html+=interpBlock(paras)+reassessBlock()+disclaimerBlock();
-
-  html+=`<div style="margin-top:32px;padding-top:24px;border-top:1px solid #e0ddd4;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;"><button type="button" id="fci-btn-next" style="font-family:'Georgia','Times New Roman',serif;font-size:13px;font-weight:600;letter-spacing:0.08em;padding:10px 24px;background:#b8922a;color:#fff;border:none;cursor:pointer;">Continue to Next Assessment</button><button type="button" id="fci-btn-dashboard" style="font-family:'Georgia','Times New Roman',serif;font-size:13px;font-weight:600;letter-spacing:0.08em;padding:10px 24px;background:#fff;color:#b8922a;border:1.5px solid #b8922a;cursor:pointer;">Return to Dashboard</button></div>`;
-  html+=`</div>`;
-  return html;
+          <button id="fci-btn-dashboard" class="btn-ghost">
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RENDER + EVENT BINDING
 // ─────────────────────────────────────────────────────────────────────────────
+let _fciCompleteNotified = false;
+
+function notifyComplete() {
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage(
+      { type: 'INSTRUMENT_COMPLETE', instrument: 'FCI', caseType },
+      '*'
+    );
+  }
+}
+
 function render(){
   const app=document.getElementById("app");
   const sc=S.screen;
@@ -661,18 +644,10 @@ function render(){
   else if(sc==="vuln-intro") html=screenVulnIntro();
   else if(sc==="vuln") html=screenVuln();
   else if(sc.startsWith("domain-")) html=screenDomain(parseInt(sc.split("-")[1]));
-  else if(sc==="final") html=screenFinal();
+  else if(sc==="complete") html=screenComplete();
 
   app.innerHTML=html;
   bindEvents();
-
-  // Notify Case Clarity portal that FCI is fully complete for the selected case type
-  if (sc === "final" && window.opener && !window.opener.closed) {
-    window.opener.postMessage(
-      { type: 'INSTRUMENT_COMPLETE', instrument: 'FCI', caseType },
-      '*'
-    );
-  }
 
   window.scrollTo(0,0);
 }
@@ -724,12 +699,16 @@ function bindEvents(){
     bind("dom-back",()=>{ if(idx===0) setState({screen:"vuln"}); else setState({screen:"domain-"+(idx-1)}); });
     bind("dom-next",()=>{
       if(idx<DOMAINS.length-1) setState({screen:"domain-"+(idx+1)});
-      else { S.analysisDate=fmtDate(new Date()); setState({screen:"final"}); }
+      else setState({screen:"complete"});
     });
   }
-  if(sc==="final"){
-    bind("fci-btn-next",()=>goToNext());
-    bind("fci-btn-dashboard",()=>returnToDashboard());
+  if(sc==="complete"){
+    if(!_fciCompleteNotified){
+      _fciCompleteNotified=true;
+      notifyComplete();
+    }
+    document.getElementById("fci-btn-next").addEventListener("click", goToNext);
+    document.getElementById("fci-btn-dashboard").addEventListener("click", returnToDashboard);
   }
 }
 
