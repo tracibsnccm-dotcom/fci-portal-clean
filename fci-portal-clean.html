@@ -574,12 +574,20 @@ function bindEvents(){
       } catch (e2) {}
     });
 
-    document.getElementById('fci-btn-dashboard')?.addEventListener('click', (e) => {
+    document.getElementById('fci-btn-dashboard')?.addEventListener('click', function (e) {
+      e.preventDefault();
+      var ret = { type: 'FCI_RETURN_TO_DASHBOARD', instrument: 'FCI', portalUrl: PORTAL_URL };
       if (window.opener && !window.opener.closed) {
-        e.preventDefault();
+        try { window.opener.postMessage(ret, '*'); } catch (x) {}
         window.opener.focus();
         window.close();
+        return;
       }
+      if (window.parent && window.parent !== window) {
+        try { window.parent.postMessage(ret, '*'); } catch (x) {}
+        return;
+      }
+      window.location.href = PORTAL_URL;
     });
   }
 }
