@@ -472,14 +472,14 @@ function screenComplete() {
 <a id="fci-btn-next"
    class="btn-primary"
    href="${RRF_URL}"
-   target="_blank"
-   rel="noopener noreferrer">
+   style="display:block;width:100%;max-width:400px;margin:0 auto;box-sizing:border-box;text-align:center;text-decoration:none;">
    Continue to Next Assessment
 </a>
 
 <a id="fci-btn-dashboard"
    class="btn-ghost"
-   href="${PORTAL_URL}">
+   href="${PORTAL_URL}"
+   style="display:block;width:100%;max-width:400px;margin:0 auto;box-sizing:border-box;text-align:center;text-decoration:none;">
    Return to Dashboard
 </a>
 </div></div></div>`;
@@ -564,24 +564,14 @@ function bindEvents(){
       _fciCompleteNotified=true;
       notifyComplete();
     }
-    document.getElementById('fci-btn-next')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      var url = RRF_URL;
-      var w = window.open(url, '_blank', 'noopener,noreferrer');
-      if (!w || w.closed) {
-        try { w = window.top.open(url, '_blank', 'noopener,noreferrer'); } catch (err) {}
-      }
-      if (!w || w.closed) {
-        try { window.top.location.href = url; } catch (err2) { window.location.href = url; }
-      }
-      setTimeout(function () {
-        if (window.opener && !window.opener.closed) {
-          window.opener.postMessage(
-            { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType },
-            '*'
-          );
-        }
-      }, 0);
+    document.getElementById('fci-btn-next')?.addEventListener('click', function () {
+      var msg = { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType: caseType };
+      try {
+        if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*');
+      } catch (e1) {}
+      try {
+        if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+      } catch (e2) {}
     });
 
     document.getElementById('fci-btn-dashboard')?.addEventListener('click', (e) => {
