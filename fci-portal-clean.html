@@ -276,7 +276,7 @@ NO STRIPE / NO PAYMENTS / NO GATING
 
 <script>
 const caseType = new URLSearchParams(window.location.search).get('caseType') || 'active';
-const RRF_URL = `https://recovery-risk-forecaster.vercel.app/?caseType=${caseType}&instrument=RRF`;
+const RRF_URL = `https://recovery-risk-forecaster.vercel.app/?caseType=${encodeURIComponent(caseType)}&instrument=RRF`;
 const PORTAL_URL = 'https://case-clarity-project.vercel.app/';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -564,14 +564,24 @@ function bindEvents(){
       _fciCompleteNotified=true;
       notifyComplete();
     }
-    document.getElementById('fci-btn-next')?.addEventListener('click', () => {
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(
-          { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType },
-          '*'
-        );
-        window.opener.focus();
+    document.getElementById('fci-btn-next')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      var url = RRF_URL;
+      var w = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!w || w.closed) {
+        try { w = window.top.open(url, '_blank', 'noopener,noreferrer'); } catch (err) {}
       }
+      if (!w || w.closed) {
+        try { window.top.location.href = url; } catch (err2) { window.location.href = url; }
+      }
+      setTimeout(function () {
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage(
+            { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType },
+            '*'
+          );
+        }
+      }, 0);
     });
 
     document.getElementById('fci-btn-dashboard')?.addEventListener('click', (e) => {
