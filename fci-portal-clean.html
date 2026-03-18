@@ -275,8 +275,76 @@ NO STRIPE / NO PAYMENTS / NO GATING
 <div id="app"></div>
 
 <script>
-const caseType = new URLSearchParams(window.location.search).get('caseType') || 'active';
-const RRF_URL = `https://recovery-risk-forecaster.vercel.app/?caseType=${encodeURIComponent(caseType)}&instrument=RRF`;
+// ===== AUTHENTICATION & NAVIGATION =====
+(function() {
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session');
+    const assessmentId = urlParams.get('assessmentId');
+    const caseType = urlParams.get('caseType');
+    const currentTool = urlParams.get('tool');
+    
+    // If no session, redirect to login
+    if (!sessionId || !assessmentId) {
+        window.location.href = 'https://case-clarity-project-992q2ectn-tracis-projects-26fd65a2.vercel.app/login.html';
+        return;
+    }
+    
+    // Store in sessionStorage
+    sessionStorage.setItem('tool_session', sessionId);
+    sessionStorage.setItem('tool_assessment', assessmentId);
+    sessionStorage.setItem('tool_caseType', caseType);
+    sessionStorage.setItem('tool_name', currentTool);
+    
+    // Tool order for navigation
+    const TOOL_ORDER = ['CCI', 'CSA', 'CAF', 'HSI', 'FCI', 'RRF'];
+    const TOOL_URLS = {
+        'CCI': 'https://case-complexity-index-e0hdp2mvz-tracis-projects-26fd65a2.vercel.app',
+        'CSA': 'https://care-auditor-cvds0k5dx-tracis-projects-26fd65a2.vercel.app',
+        'CAF': 'https://care-access-friction-score-133sg5wgb-tracis-projects-26fd65a2.vercel.app',
+        'HSI': 'https://holistic-stability-index-1bbz5j5r7-tracis-projects-26fd65a2.vercel.app',
+        'FCI': 'https://fci-portal-clean-4jbc10zs1-tracis-projects-26fd65a2.vercel.app',
+        'RRF': 'https://recovery-risk-forecaster-n7s9o0uzm-tracis-projects-26fd65a2.vercel.app'
+    };
+    
+    const currentIndex = TOOL_ORDER.indexOf(currentTool);
+    const nextTool = TOOL_ORDER[currentIndex + 1];
+    
+    // Mark assessment complete
+    window.markAssessmentComplete = async function(assessmentData) {
+        if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({
+                type: 'ASSESSMENT_COMPLETE',
+                assessmentId: assessmentId,
+                caseType: caseType,
+                tool: currentTool,
+                data: assessmentData
+            }, '*');
+        }
+        sessionStorage.setItem(`${currentTool}_${caseType}_complete`, 'true');
+    };
+    
+    // Navigation functions
+    window.returnToDashboard = function() {
+        window.close();
+    };
+    
+    window.goToNextAssessment = function() {
+        if (nextTool) {
+            const nextUrl = new URL(TOOL_URLS[nextTool]);
+            nextUrl.searchParams.set('session', sessionId);
+            nextUrl.searchParams.set('assessmentId', assessmentId);
+            nextUrl.searchParams.set('caseType', caseType);
+            nextUrl.searchParams.set('tool', nextTool);
+            window.location.href = nextUrl.toString();
+        } else {
+            window.close();
+        }
+    };
+})();
+// ===== END AUTHENTICATION =====
+
+const caseType = new URLSearchParams(window.location.search).get('caseType') || sessionStorage.getItem('tool_caseType') || 'active';
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
@@ -466,12 +534,13 @@ function screenDomain(idx){
 }
 
 function screenComplete() {
-  return appHeader()+`<div class="container"><div class="card" style="text-align:center;padding:48px 40px;"><h2 class="section-title" style="margin-bottom:28px;">Assessment complete</h2><div style="display:flex;flex-direction:column;gap:16px;align-items:center;max-width:400px;margin:0 auto;">
-<button type="button" class="btn-primary" id="fci-btn-next" style="display:block;width:100%;max-width:400px;margin:0 auto;box-sizing:border-box;text-align:center;">Continue to Next Assessment</button>
-
-<button type="button" class="btn-ghost" id="fci-btn-dashboard" style="display:block;width:100%;max-width:400px;margin:0 auto;box-sizing:border-box;text-align:center;">
-   Return to Dashboard
-</button>
+  return appHeader()+`<div class="container"><div class="card" style="text-align:center;padding:48px 40px;"><h2 class="section-title" style="margin-bottom:28px;">Assessment complete</h2><div style="display: flex; gap: 16px; justify-content: center; margin-top: 40px;">
+    <button onclick="returnToDashboard()" class="btn-ghost">
+        ← Return to Dashboard
+    </button>
+    <button onclick="goToNextAssessment()" class="btn-primary">
+        Continue to Next Assessment →
+    </button>
 </div></div></div>`;
 }
 
@@ -554,49 +623,6 @@ function bindEvents(){
       _fciCompleteNotified=true;
       notifyComplete();
     }
-    document.getElementById('fci-btn-next')?.addEventListener('click', function (e) {
-      e.preventDefault();
-      function isInIframe() {
-        try { return window.self !== window.top; }
-        catch (err) { return true; }
-      }
-      const msg = { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType: caseType };
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(msg, '*');
-        window.opener.focus();
-        window.close();
-        return;
-      }
-      if (isInIframe()) {
-        try { window.parent.postMessage(msg, '*'); } catch (err) {}
-        return;
-      }
-      window.location.href = RRF_URL;
-    });
-
-    document.getElementById('fci-btn-dashboard')?.addEventListener('click', function () {
-      // Add iframe detection
-      function isInIframe() {
-        try { return window.self !== window.top; }
-        catch (e) { return true; }
-      }
-
-      const msg = { type: 'FCI_RETURN_TO_DASHBOARD', instrument: 'FCI', caseType: caseType };
-
-      if (window.opener && !window.opener.closed) {
-        window.opener.postMessage(msg, '*');
-        window.opener.focus();
-        window.close();
-        return;
-      }
-
-      if (isInIframe()) {
-        try { window.parent.postMessage(msg, '*'); } catch (e) {}
-        return;
-      }
-
-      window.location.href = 'https://case-clarity-project.vercel.app/';
-    });
   }
 }
 
