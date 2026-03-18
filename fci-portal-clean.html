@@ -276,8 +276,8 @@ NO STRIPE / NO PAYMENTS / NO GATING
 
 <script>
 const caseType = new URLSearchParams(window.location.search).get('caseType') || 'active';
-
-const RRF_URL = "https://recovery-risk-forecaster.vercel.app/";
+const RRF_URL = `https://recovery-risk-forecaster.vercel.app/?caseType=${caseType}&instrument=RRF`;
+const PORTAL_URL = 'https://case-clarity-project.vercel.app/';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
@@ -469,8 +469,19 @@ function screenDomain(idx){
 
 function screenComplete() {
   return appHeader()+`<div class="container"><div class="card" style="text-align:center;padding:48px 40px;"><h2 class="section-title" style="margin-bottom:28px;">Assessment complete</h2><div style="display:flex;flex-direction:column;gap:16px;align-items:center;max-width:400px;margin:0 auto;">
-<button type="button" class="btn-primary" id="fci-btn-next" style="width:100%;">Continue to RRF</button>
-<button type="button" class="btn-ghost" id="fci-btn-dashboard" style="width:100%;">Go to Dashboard</button>
+<a id="fci-btn-next"
+   class="btn-primary"
+   href="${RRF_URL}"
+   target="_blank"
+   rel="noopener noreferrer">
+   Continue to Next Assessment
+</a>
+
+<a id="fci-btn-dashboard"
+   class="btn-ghost"
+   href="${PORTAL_URL}">
+   Return to Dashboard
+</a>
 </div></div></div>`;
 }
 
@@ -553,8 +564,23 @@ function bindEvents(){
       _fciCompleteNotified=true;
       notifyComplete();
     }
-    document.getElementById("fci-btn-next").addEventListener("click", goToNext);
-    document.getElementById("fci-btn-dashboard").addEventListener("click", returnToDashboard);
+    document.getElementById('fci-btn-next')?.addEventListener('click', () => {
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(
+          { type: 'GO_TO_NEXT_ASSESSMENT', instrument: 'FCI', nextInstrument: 'RRF', caseType },
+          '*'
+        );
+        window.opener.focus();
+      }
+    });
+
+    document.getElementById('fci-btn-dashboard')?.addEventListener('click', (e) => {
+      if (window.opener && !window.opener.closed) {
+        e.preventDefault();
+        window.opener.focus();
+        window.close();
+      }
+    });
   }
 }
 
@@ -563,35 +589,6 @@ function bind(id,fn){ const el=document.getElementById(id); if(el) el.addEventLi
 // Initial render
 render();
 
-function goToNext() {
-  console.log("NEXT CLICKED");
-
-  if (window.opener && !window.opener.closed) {
-    window.opener.postMessage({
-      type: 'GO_TO_NEXT_ASSESSMENT',
-      instrument: 'FCI',
-      nextInstrument: 'RRF',
-      caseType
-    }, '*');
-
-    window.opener.focus();
-  }
-
-  // FORCE open RRF no matter what
-  const url = `${RRF_URL}?caseType=${caseType}&instrument=RRF`;
-  console.log("Opening RRF:", url);
-  window.open(url, '_blank');
-}
-
-function returnToDashboard() {
-  console.log("RETURN CLICKED");
-
-  if (window.opener && !window.opener.closed) {
-    window.opener.focus();
-  }
-
-  window.close();
-}
 </script>
 </body>
 </html>
