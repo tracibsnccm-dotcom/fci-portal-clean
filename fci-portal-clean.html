@@ -326,7 +326,11 @@ NO STRIPE / NO PAYMENTS / NO GATING
     
     // Navigation functions
     window.returnToDashboard = function() {
-        window.close();
+        if (window.opener && !window.opener.closed) {
+            window.close();
+        } else {
+            window.location.href = 'https://case-clarity-project-hkwi6pqyb-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + sessionId + '&assessmentId=' + assessmentId;
+        }
     };
     
     window.goToNextAssessment = function() {
@@ -338,7 +342,8 @@ NO STRIPE / NO PAYMENTS / NO GATING
             nextUrl.searchParams.set('tool', nextTool);
             window.location.href = nextUrl.toString();
         } else {
-            window.close();
+            // Last tool — return to dashboard
+            window.location.href = 'https://case-clarity-project-hkwi6pqyb-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + sessionId + '&assessmentId=' + assessmentId;
         }
     };
 })();
