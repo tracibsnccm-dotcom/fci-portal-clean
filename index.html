@@ -325,8 +325,10 @@
 
 <script>
 const caseType = new URLSearchParams(window.location.search).get('caseType') || 'active';
-const RRF_URL = 'https://recovery-risk-forecaster.vercel.app/?caseType=' + encodeURIComponent(caseType) + '&instrument=RRF';
-const PORTAL_URL = 'https://case-clarity-project-992q2ectn-tracis-projects-26fd65a2.vercel.app/';
+const sessionId = new URLSearchParams(window.location.search).get('session') || '';
+const assessmentId = new URLSearchParams(window.location.search).get('assessmentId') || '';
+const RRF_URL = 'https://recovery-risk-forecaster-n7s9o0uzm-tracis-projects-26fd65a2.vercel.app/?session=' + encodeURIComponent(sessionId) + '&assessmentId=' + encodeURIComponent(assessmentId) + '&caseType=' + encodeURIComponent(caseType) + '&tool=RRF';
+const PORTAL_URL = 'https://case-clarity-project-mt0wcyyo7-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + encodeURIComponent(sessionId) + '&assessmentId=' + encodeURIComponent(assessmentId);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
@@ -484,7 +486,7 @@ function buildInterp({fciScore,primaryDomains,fvi,painScore,psychScore}){
 // STATE
 // ─────────────────────────────────────────────────────────────────────────────
 const S = {
-  screen:"intro",
+  screen:"vuln-intro",
   ctx:{clientRef:"",doi:"",injuryType:""},
   fviFields:{incomeRange:"",hasDependents:"",isSoleEarner:""},
   vulnScores:{pain:null,psych:null},
@@ -609,12 +611,25 @@ function screenComplete() {
 let _fciCompleteNotified = false;
 
 function notifyComplete() {
-  if (window.opener && !window.opener.closed) {
-    window.opener.postMessage(
-      { type: 'INSTRUMENT_COMPLETE', instrument: 'FCI', caseType },
-      '*'
-    );
-  }
+  const assessmentData = {
+    instrument: 'FCI',
+    fciScore: Math.min(...Object.values(S.scores).filter(Boolean)),
+    scores: S.scores,
+    vulnScores: S.vulnScores,
+    fviFields: S.fviFields,
+    completedAt: new Date().toISOString()
+  };
+
+  const msg = {
+    type: 'ASSESSMENT_COMPLETE',
+    assessmentId: assessmentId,
+    caseType: caseType,
+    tool: 'FCI',
+    data: assessmentData
+  };
+
+  try { if (window.opener && !window.opener.closed) window.opener.postMessage(msg, '*'); } catch(e) {}
+  try { if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*'); } catch(e) {}
 }
 
 function render(){
