@@ -328,7 +328,7 @@ const caseType = new URLSearchParams(window.location.search).get('caseType') || 
 const sessionId = new URLSearchParams(window.location.search).get('session') || '';
 const assessmentId = new URLSearchParams(window.location.search).get('assessmentId') || '';
 const RRF_URL = 'https://recovery-risk-forecaster-n7s9o0uzm-tracis-projects-26fd65a2.vercel.app/?session=' + encodeURIComponent(sessionId) + '&assessmentId=' + encodeURIComponent(assessmentId) + '&caseType=' + encodeURIComponent(caseType) + '&tool=RRF';
-const PORTAL_URL = 'https://case-clarity-project-mt0wcyyo7-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + encodeURIComponent(sessionId) + '&assessmentId=' + encodeURIComponent(assessmentId);
+const PORTAL_URL = 'https://case-clarity-project-hkwi6pqyb-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + encodeURIComponent(sessionId) + '&assessmentId=' + encodeURIComponent(assessmentId);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA
@@ -494,7 +494,12 @@ const S = {
   analysisDate:""
 };
 
-function setState(patch){ Object.assign(S,patch); render(); }
+function setState(patch){
+  Object.assign(S,patch);
+  // FCI-PORTAL-FIXES: skip Client/Case Context screen
+  if(S.screen === 'context') { S.screen = 'vuln-intro'; }
+  render();
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HTML BUILDERS
@@ -784,7 +789,7 @@ render();
             window.open(nextUrl.toString(), '_blank');
             window.close();
         } else {
-            window.location.href = 'https://case-clarity-project-mt0wcyyo7-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + sessionId + '&assessmentId=' + assessmentId;
+            window.location.href = 'https://case-clarity-project-hkwi6pqyb-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + sessionId + '&assessmentId=' + assessmentId;
         }
     };
 
@@ -793,7 +798,7 @@ render();
             window.opener.focus();
             window.close();
         } else {
-            window.location.href = 'https://case-clarity-project-mt0wcyyo7-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + sessionId + '&assessmentId=' + assessmentId;
+            window.location.href = 'https://case-clarity-project-hkwi6pqyb-tracis-projects-26fd65a2.vercel.app/dashboard.html?session=' + sessionId + '&assessmentId=' + assessmentId;
         }
     };
 
